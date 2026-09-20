@@ -1,1 +1,1 @@
-kiso-mcp-server.exe -s concepts
+kiso-mcp-server.exe -s ecs-okf

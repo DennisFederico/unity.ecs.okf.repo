@@ -1,7 +1,7 @@
 ---
 description: Parallel recording with EntityCommandBuffer.ParallelWriter, deterministic playback with sort keys, deferred entity references, and system-managed vs manual ECB lifecycles in Unity Entities 1.4+.
 generated:
-  at: 2026-09-07T14:57:00Z
+  at: 2026-09-20T17:39:00Z
   by: curator/antigravity
 sources:
   - id: unity-entities-ecb
@@ -151,12 +151,16 @@ public partial struct SpawnWaveJob : IJobEntity
 
 ## 4. System-Managed vs Manual ECB Lifecycle
 
-Understanding who owns the lifecycle of an `EntityCommandBuffer` is critical to avoiding crashes and native memory leaks:
+Understanding who owns the lifecycle of an `EntityCommandBuffer` is critical to avoiding crashes and native memory leaks. In modern Unity ECS, runtime systems (`ISystem`, `SystemBase`) MUST exclusively use System-Managed ECBs. These buffers operate on a strict **record-and-forget** model: your systems record commands into the buffer and exit. The owning `EntityCommandBufferSystem` automatically manages playback and disposal at system group boundaries. Manually instantiated ECBs are restricted to isolated unit tests and custom editor utilities.
 
-| Feature | System-Managed ECB | Manual Custom ECB |
+> [!CAUTION]
+> **Never Call Playback in Runtime Systems**:
+> System-managed buffers obtained from singletons (e.g. `BeginSimulationEntityCommandBufferSystem.Singleton`) are automatically played back by their owning system group. Calling `ecb.Playback()` or `ecb.Dispose()` triggers a fatal runtime `InvalidOperationException`. In runtime systems, simply record commands and exit the method.
+
+| Feature | System-Managed ECB (Runtime Systems) | Manual Custom ECB (Tests / Tooling Only) |
 | :--- | :--- | :--- |
 | **Creation** | `SystemAPI.GetSingleton<T.Singleton>().CreateCommandBuffer(...)` | `new EntityCommandBuffer(Allocator.TempJob)` |
-| **Playback** | Automated at group boundary | Explicit: `ecb.Playback(EntityManager)` on Main Thread |
+| **Playback** | Automated at group boundary (**Record-and-Forget**) | Prohibited in runtime systems. Restricted to isolated tests / editor tools: `ecb.Playback(EntityManager)` |
 | **Disposal** | Automated by the managing system | Explicit: `ecb.Dispose()` or `ecb.Dispose(JobHandle)` |
 | **Primary Use Case** | All gameplay, simulation, and parallel systems | Custom test harnesses, editor tools, or isolated manual playback |
 
@@ -178,8 +182,9 @@ Understanding who owns the lifecycle of an `EntityCommandBuffer` is critical to 
   * *Avoid*: Attempting to read components from or query a placeholder entity before the command buffer plays back.
 * **Lifecycle Discipline**:
   * *Prefer*: System-managed command buffers (`BeginSimulation...` / `EndSimulation...`) for all runtime systems.
+  * *Prefer*: Treating system-managed command buffers as append-only recordings with zero manual playback or disposal calls.
+  * *Avoid*: Calling `.Playback()` or `.Dispose()` anywhere in runtime game systems.
   * *Avoid*: Passing a constant integer (e.g., `0`) to `ParallelWriter` methods across concurrent threads.
-  * *Avoid*: Calling `.Playback()` or `.Dispose()` on system-managed ECBs.
   * *Avoid*: Forgetting to call `.Dispose()` on manually instantiated `new EntityCommandBuffer(...)` instances.
 
 ---

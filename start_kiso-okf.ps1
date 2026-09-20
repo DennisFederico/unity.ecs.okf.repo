@@ -1,1 +1,1 @@
-kiso-mcp-server.exe -s ecs-okf
+kiso-mcp-server.exe -s ecs-okf -H 127.0.0.1 -p 61080

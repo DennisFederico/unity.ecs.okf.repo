@@ -13,7 +13,7 @@
       }
     },
     "ddg-websearch": {
-      "command": "npx",
+      "command": "npx.cmd",
       "args": [
         "-y",
         "duckduckgo-mcp-server"

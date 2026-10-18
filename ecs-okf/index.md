@@ -26,7 +26,7 @@
 
 ## Playbook
 
-* [Agentic DOTS/ECS Scene Assembly](./agentic-scene-assembly.md) - Automated DOTS/ECS scene assembly protocols, multi-editor port routing, and native component workflows via Anklebreaker Unity MCP.
+* [Agentic DOTS/ECS Scene Assembly](./agentic-scene-assembly.md) - Automated DOTS/ECS scene assembly protocols, Unity CLI connection workflows, and subscene rigging sequences via official Unity CLI and com.unity.pipeline.
 
 ## Troubleshooting Guide
 
